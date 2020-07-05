@@ -1,2 +1,9 @@
 .DS_Store
 build/
+.openzeppelin\.session
+
+# OpenZeppelin
+.openzeppelin/dev-*.json
+.openzeppelin/.session
+
+node_modules

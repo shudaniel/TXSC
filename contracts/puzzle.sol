@@ -45,6 +45,12 @@ contract Puzzle {
                 solution = bytesToBytes32(msg.data, 0);
                 solved = true;
             }
+            else {
+                log0(bytes32("Incorrect"));
+            }
+        }
+        else {
+            log0(bytes32("Puzzle already solved"));
         }
     }
 
