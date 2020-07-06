@@ -31,6 +31,7 @@ contract Puzzle {
             owner == msg.sender,
             "Only the owner may update the reward"
         );
+        log0(bytes32(msg.value));
 
         if (!solved) {
             owner.transfer(reward);
