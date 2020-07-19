@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity >=0.5.0 <0.6.0;
 import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
 
 contract BlockKing is usingOraclize {
@@ -13,8 +13,7 @@ contract BlockKing is usingOraclize {
     uint public reward;
     uint public minBet;
 
-    mapping(bytes32 => address payable) public players;
-    mapping(bytes32 => uint) public player_blocks;
+    mapping(address => uint) pendingWithdrawls;
 
     constructor(uint minimum) public payable {
         minBet = minimum;
@@ -25,17 +24,19 @@ contract BlockKing is usingOraclize {
     }
 
     function enter() public payable {
-        if (msg.value > minBet) {
-            warrior = msg.sender;
-            warriorGold = msg.value;
-            reward += msg.value;
-            warriorBlock = block.number;
+        require (
+            msg.value >= minBet,
+            'This function requires the value to be greater than minBet'
+        );
+        warrior = msg.sender;
+        warriorGold = msg.value;
+        reward += msg.value;
+        warriorBlock = block.number;
 
-            bytes32 myid = oraclize_query("WolframAlpha", "random number between 1 and 9");
-            players[myid] = msg.sender;
-            player_blocks[myid] = block.number;
+        bytes32 myid = oraclize_query("WolframAlpha", "random number between 1 and 9");
 
-        }
+
+        
     }
 
     function __callback(bytes32 myid, string memory result) public {
@@ -46,20 +47,30 @@ contract BlockKing is usingOraclize {
 
         // Get the first digit of the warriorBlock
         uint singleDigitBlock = warriorBlock;
+        if (singleDigitBlock == 0) {
+            singleDigitBlock = 1;
+        }
         while (singleDigitBlock >= 10) {
             singleDigitBlock /= 10;
         }
         if (randomNumber == singleDigitBlock) {
             // Give 50% to the owner and 50% to the new block king
-           king = players[myid];
-           kingBlock = player_blocks[myid];
+           king = warrior;
+           kingBlock = warriorBlock;
 
            uint rewardToTransfer1 = reward / 2;
            uint rewardToTransfer2 = reward - rewardToTransfer1;
-           owner.transfer(rewardToTransfer1);
-           king.transfer(rewardToTransfer2);
+           
+           pendingWithdrawls[owner] = rewardToTransfer1;
+           pendingWithdrawls[king]= rewardToTransfer2;
            reward = 0;
         }
         
+    }
+    
+    function withdraw() public payable {
+        uint amount = pendingWithdrawls[msg.sender];
+        pendingWithdrawls[msg.sender] = 0;
+        msg.sender.transfer(amount);
     }
 }

@@ -8,17 +8,6 @@ contract Puzzle {
     bytes32 public diff;
     bytes32 public solution;
 
-    // Convert bytes array to bytes32
-    // https://ethereum.stackexchange.com/questions/7702/how-to-convert-byte-array-to-bytes32-in-solidity
-    function bytesToBytes32(bytes memory b, uint offset) private pure returns (bytes32) {
-        bytes32 out;
-
-        for (uint i = 0; i < 32; i++) {
-            out |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
-        }
-        return out;
-    }
-
     constructor(bytes32 difficulty) public payable {
         owner = msg.sender;
         reward = msg.value;
@@ -31,7 +20,6 @@ contract Puzzle {
             owner == msg.sender,
             "Only the owner may update the reward"
         );
-        log0(bytes32(msg.value));
 
         if (!solved) {
             owner.transfer(reward);
@@ -40,18 +28,19 @@ contract Puzzle {
     }
 
     function submitSolution() public payable {
+        // For the purposes of reproducing the bug, I will introduce a delay with this big loop
+
         if (!solved) {
-            if (sha256(msg.data) < diff) {
+            // For now, I will not use sha256 so I can test this easier
+            // if (sha256(msg.data) < diff) {
+            if (true) {
                 msg.sender.transfer(reward);
-                solution = bytesToBytes32(msg.data, 0);
+                for (uint i = 0; i < 32; i++) {
+                    solution = sha256(msg.data);
+                }
+                // solution = bytesToBytes32(msg.data, 0);
                 solved = true;
             }
-            else {
-                log0(bytes32("Incorrect"));
-            }
-        }
-        else {
-            log0(bytes32("Puzzle already solved"));
         }
     }
 

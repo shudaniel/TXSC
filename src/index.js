@@ -16,15 +16,24 @@ async function main() {
   const loader = setupLoader({ provider: web3 }).web3;
 
   // Set up a web3 contract, representing our deployed Box instance, using the contract loader
-  const address = '0x25Ca8Be01b463023F0f8F2d8e8f75785CCb3b139';
+  const address = '0xE0E94479cE527C04Ff485BcFAc98ded13733592a';
 
   const box = loader.fromArtifact('Puzzle', address);
   // Send a transaction to store() a new value in the Box
-  await box.methods.updateReward()
-    .send({ from: accounts[0], value: 30, gas: 50000, gasPrice: 1e6 });
+  // 1 ether = 1e18 wei
+  // await box.methods.updateReward()
+  //   .send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6 });
 
-  await box.methods.submitSolution()
-    .send({ from: accounts[4], data:1234567890, gas: 50000, gasPrice: 1e6 });
+  try {
+    box.methods.submitSolution()
+      .send({ from: accounts[1], gas: 6721975, gasPrice: 1e6 });
+
+    box.methods.updateReward()
+      .send({ from: accounts[0], value: 0 , gas: 50000, gasPrice: 1e6 });
+  }
+  catch (err) {
+    console.log(err.message);
+  }
 
 }
 
