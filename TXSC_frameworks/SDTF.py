@@ -35,59 +35,82 @@ def extract_state_variables(body, statevariables):
 if __name__ == '__main__':
 
     sourceUnit = parser.parse_file(sys.argv[1])
-    pprint.pprint(sourceUnit)
-
-    exit(0)
-
-    subnodes = sourceUnit['children'][1]['subNodes']
-    statevariables = set()
-    functiondefinitions = {}  # Mapping of function definition name to list of all the state variables that it uses
-    re_expressions = {}  # Mapping of function definition to the regular expression that will be used to locate it
-
-    # Iterate once through to grab all the statevariables
-    for node in subnodes:
-        nodetype = node['type']
-        if nodetype == 'StateVariableDeclaration':
-            for variable in node['variables']:
-                if variable['visibility'] == 'public':
-                    statevariables.add(variable['name'])
-
-    # Iterate again to examine each function definition
-    for node in subnodes:
-        nodetype = node['type']
-        if nodetype == "FunctionDefinition" and not node['isConstructor']:
-            # Identify all the statevariables that are used in each function
-            body = node['body']
-            name = node['name']
-            used_state_variables = extract_state_variables(body, statevariables)
-            if len(used_state_variables) > 0:
-                # Create the require statement
-                requires = "require("
-                for idx, variable in enumerate(used_state_variables):
-                    if idx > 0:
-                        requires += " && "
-                    requires += variable + " == msg.data." + variable
-                requires += ", \"Readset of contract data at time of calling is stale\");" 
-
-                functiondefinitions[name] = requires
-                re_expressions[name] = r"function\s+" + name + r"\(.*\).*\{"
-
-    pprint.pprint(statevariables)  
-    pprint.pprint(functiondefinitions)  
-    pprint.pprint(re_expressions)
-    
 
     f = open(sys.argv[1], "r")
     contract = f.read()
     f.close()
-    
-    for name in functiondefinitions:
-        requires = functiondefinitions[name]
-        
-        old_definition = re.search( re_expressions[name], contract ).group()
-        contract = re.sub(re_expressions[name],  old_definition + "\n" + requires + "\n",contract)
-    # Find all the functions
 
+    # This script will append on additional parameters to each SDTF marked function. 
+    # The variable names will equal {variable_prefix}_{state variable name}
+    variable_prefix = "readset"
+
+
+    for child in sourceUnit["children"]:
+        # If there is more than one contract definition within this file, then this script
+        # assumes that every function between the two contracts has a different name
+        
+        if child["type"] == "ContractDefinition":
+            subnodes = child['subNodes']
+
+            statevariables = dict()
+            # functiondefinitions = {}  # Mapping of function definition name to list of all the state variables that it uses
+            # re_expressions = {}  # Mapping of function definition to the regular expression that will be used to locate it
+
+            # Iterate once through to grab all the statevariables
+            for node in subnodes:
+                nodetype = node['type']
+                if nodetype == 'StateVariableDeclaration':
+                    for variable in node['variables']:
+                        if variable['visibility'] == 'public':
+                            # At the moment, this framework will only work on state variables that are of type : ElementaryTypeName
+                            if variable['typeName']['type'] == "ElementaryTypeName":
+                                statevariables[variable['name']] = variable["typeName"]["name"]
+
+            # Iterate again to examine each function definition
+            for node in subnodes:
+                nodetype = node['type']
+                if nodetype == "FunctionDefinition" and not node['isConstructor']:
+                    # Identify all the statevariables that are used in each function
+                    body = node['body']
+                    name = node['name']
+                    used_state_variables = extract_state_variables(body, statevariables.keys())
+                    if len(used_state_variables) > 0:
+
+                        # First, get the list of parameters
+                        definition_re = r"function\s+" + name + r"\("
+                        functiondefinition = re.search(definition_re, contract).group()
+                        # The parameter name will be {variable_prefix}_{STATE VARIABLE NAME}
+
+
+                        # Create the require statement and updated parameter list
+                        requires = "require("
+                        for idx, variable in enumerate(used_state_variables):
+                            if idx > 0:
+                                requires += " && "
+                                functiondefinition += ","
+                            requires += variable + " == " + variable_prefix + "_" + variable
+                            functiondefinition += statevariables[variable] + " " + variable_prefix + "_" + variable
+
+                        requires += ", \"Readset of contract data at time of calling is stale\");" 
+
+                        # Append parameters to this function. 
+                        # Also check if there are any parameters in this function already. If so, then you will need to append a comma to the end of the new functiondefinition
+                        if len(node['parameters']['parameters']) > 0:
+                            functiondefinition += ","
+
+                        # functiondefinitions[name] = requires
+                        # re_expressions[name] = r"function\s+" + name + r"\(.*\).*\{"
+
+                        # Add the requires statement
+                        old_definition = re.search( r"function\s+" + name + r"\(.*\).*\{", contract ).group()
+                        contract = re.sub(r"function\s+" + name + r"\(.*\).*\{",  old_definition + "\n" + requires + "\n",contract)
+
+                        # Update the parameter list
+                        contract = re.sub(definition_re, functiondefinition, contract)
+
+    pprint.pprint(statevariables)  
+    
+    # Write the new contract into a file
     f = open(sys.argv[2], "w")
     f.write(contract)
     f.close
