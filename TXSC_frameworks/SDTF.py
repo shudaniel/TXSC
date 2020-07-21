@@ -1,7 +1,6 @@
 import sys
 import re
 import pprint
-
 from solidity_parser import parser
 
 
@@ -32,18 +31,18 @@ def extract_state_variables(body, statevariables):
 
     return used_variables
 
-if __name__ == '__main__':
+def apply_SDTF(input_filename, output_filename):
+    # This script will append on additional parameters to each SDTF marked function. 
+    # The variable names will equal {variable_prefix}_{state variable name}
+    # The new parameters will be added to the front of the parameter list and in alphabetical order
+    # Only function definitions that are immediately proceded by the tag @STDF in a comment will be considered
+    sourceUnit = parser.parse_file(input_filename)
 
-    sourceUnit = parser.parse_file(sys.argv[1])
-
-    f = open(sys.argv[1], "r")
+    f = open(input_filename, "r")
     contract = f.read()
     f.close()
 
-    # This script will append on additional parameters to each SDTF marked function. 
-    # The variable names will equal {variable_prefix}_{state variable name}
     variable_prefix = "readset"
-
 
     for child in sourceUnit["children"]:
         # If there is more than one contract definition within this file, then this script
@@ -53,8 +52,6 @@ if __name__ == '__main__':
             subnodes = child['subNodes']
 
             statevariables = dict()
-            # functiondefinitions = {}  # Mapping of function definition name to list of all the state variables that it uses
-            # re_expressions = {}  # Mapping of function definition to the regular expression that will be used to locate it
 
             # Iterate once through to grab all the statevariables
             for node in subnodes:
@@ -73,14 +70,17 @@ if __name__ == '__main__':
                     # Identify all the statevariables that are used in each function
                     body = node['body']
                     name = node['name']
-                    used_state_variables = extract_state_variables(body, statevariables.keys())
+                    used_state_variables = list(extract_state_variables(body, statevariables.keys()))
+                    used_state_variables.sort()
                     if len(used_state_variables) > 0:
 
                         # First, get the list of parameters
-                        definition_re = r"function\s+" + name + r"\("
-                        functiondefinition = re.search(definition_re, contract).group()
-                        # The parameter name will be {variable_prefix}_{STATE VARIABLE NAME}
-
+                        definition_re = r"@SDTF\s*function\s+" + name + r"\("
+                        functiondefinition = re.search(definition_re, contract)
+                        if functiondefinition is None:
+                            continue
+                        
+                        functiondefinition = functiondefinition.group()
 
                         # Create the require statement and updated parameter list
                         requires = "require("
@@ -98,19 +98,18 @@ if __name__ == '__main__':
                         if len(node['parameters']['parameters']) > 0:
                             functiondefinition += ","
 
-                        # functiondefinitions[name] = requires
-                        # re_expressions[name] = r"function\s+" + name + r"\(.*\).*\{"
-
                         # Add the requires statement
                         old_definition = re.search( r"function\s+" + name + r"\(.*\).*\{", contract ).group()
                         contract = re.sub(r"function\s+" + name + r"\(.*\).*\{",  old_definition + "\n" + requires + "\n",contract)
 
                         # Update the parameter list
                         contract = re.sub(definition_re, functiondefinition, contract)
-
-    pprint.pprint(statevariables)  
     
     # Write the new contract into a file
-    f = open(sys.argv[2], "w")
+    f = open(output_filename, "w")
     f.write(contract)
     f.close
+    
+
+if __name__ == '__main__':
+    apply_SDTF(sys.argv[1], sys.argv[2])
