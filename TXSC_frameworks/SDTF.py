@@ -3,6 +3,8 @@ import re
 import pprint
 from solidity_parser import parser
 
+# https://etherscan.io/apis#contracts
+# API KEY: 2KTYPZPRTYYAJD4FYBV93HCTJR2SK9D8ZU
 
 def extract_state_variables(body, statevariables):
     '''
@@ -76,11 +78,11 @@ def apply_SDTF(input_filename, output_filename):
 
                         # First, get the list of parameters
                         definition_re = r"@SDTF\s*function\s+" + name + r"\("
-                        functiondefinition = re.search(definition_re, contract)
-                        if functiondefinition is None:
+                        functiondefinitionResult = re.search(definition_re, contract)
+                        if functiondefinitionResult is None:
                             continue
                         
-                        functiondefinition = functiondefinition.group()
+                        functiondefinition = functiondefinitionResult.group()
 
                         # Create the require statement and updated parameter list
                         requires = "require("

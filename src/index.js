@@ -16,24 +16,60 @@ async function main() {
   const loader = setupLoader({ provider: web3 }).web3;
 
   // Set up a web3 contract, representing our deployed Box instance, using the contract loader
-  const address = '0xE0E94479cE527C04Ff485BcFAc98ded13733592a';
+  const address = '8F4453CF3190cc99fB724E9cF978BfE68C51E8D1';
 
-  const box = loader.fromArtifact('Puzzle', address);
+  // To 
+  const box = loader.fromArtifact('Test', address);
+  var diff;
+  var owner;
+  var reward;
+  var solution;
+  var solved;
+
+  await box.methods.solved().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    console.log(result);
+    solved = result;
+    });
+
+  await box.methods.owner().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    console.log(result);
+    owner = result;
+    });
+  await box.methods.reward().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    console.log(result);
+    reward = result;
+    });
+
+  console.log(owner, reward, solved);
+  await box.methods.updateReward(owner, reward, solved)
+    .send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6 });
+
+
+  
+  await box.methods.solved().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    solved = result;
+    });
+  await box.methods.solution().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    solution = result;
+    });
+  await box.methods.diff().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    diff = result;
+    });
+  await box.methods.reward().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+    reward = result;
+    });
   // Send a transaction to store() a new value in the Box
   // 1 ether = 1e18 wei
-  // await box.methods.updateReward()
-  //   .send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6 });
 
   try {
-    box.methods.submitSolution()
+    box.methods.submitSolution(diff, reward, solution, solved)
       .send({ from: accounts[1], gas: 6721975, gasPrice: 1e6 });
 
-    box.methods.updateReward()
-      .send({ from: accounts[0], value: 0 , gas: 50000, gasPrice: 1e6 });
   }
   catch (err) {
     console.log(err.message);
   }
+    
 
 }
 

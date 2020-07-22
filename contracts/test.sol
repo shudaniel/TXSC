@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.5.0 <0.7.0;
 
-contract Puzzle {
+contract Test {
     address payable public owner;
     bool public solved;
     uint public reward;
@@ -16,7 +16,9 @@ contract Puzzle {
     }
 
     // @SDTF
-    function updateReward() public payable {
+    function updateReward(address readset_owner,uint readset_reward,bool readset_solved) public payable {
+require(owner == readset_owner && reward == readset_reward && solved == readset_solved, "Readset of contract data at time of calling is stale");
+
         require(
             owner == msg.sender,
             "Only the owner may update the reward"
@@ -29,7 +31,9 @@ contract Puzzle {
     }
 
     // @SDTF
-    function submitSolution() public payable {
+    function submitSolution(bytes32 readset_diff,uint readset_reward,bytes32 readset_solution,bool readset_solved) public payable {
+require(diff == readset_diff && reward == readset_reward && solution == readset_solution && solved == readset_solved, "Readset of contract data at time of calling is stale");
+
         // For the purposes of reproducing the bug, I will introduce a delay with this big loop
 
         if (!solved) {

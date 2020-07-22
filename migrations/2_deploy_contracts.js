@@ -1,4 +1,4 @@
-var Puzzle = artifacts.require("./puzzle.sol");
+var Puzzle = artifacts.require("./test.sol");
 module.exports = function (deployer) {
-    deployer.deploy(Puzzle, [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]);
+    deployer.deploy(Puzzle, [255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]);
 };
