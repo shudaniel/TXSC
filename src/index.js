@@ -44,7 +44,6 @@ async function main() {
   await box.methods.updateReward(owner, reward, solved)
     .send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6 });
 
-
   
   await box.methods.solved().call({ from: accounts[1], gas: 6721975, gasPrice: 1e6 }).then(function(result){
     solved = result;

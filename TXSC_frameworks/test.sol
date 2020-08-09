@@ -28,7 +28,9 @@ contract Puzzle {
     }
 
     // @SDTF
-    function submitSolution() public payable {
+    function submitSolution(bytes32 readset_diff,uint readset_reward,bytes32 readset_solution,bool readset_solved) public payable {
+require(diff == readset_diff && reward == readset_reward && solution == readset_solution && solved == readset_solved, "Readset of contract data at time of calling is stale");
+
         // For the purposes of reproducing the bug, I will introduce a delay with this big loop
 
         if (!solved) {
