@@ -3,7 +3,7 @@
 //     deployer.deploy(Callback);
 // }
 
-var Puzzle = artifacts.require("./test.sol");
+var Puzzle = artifacts.require("./puzzle.sol");
 module.exports = function (deployer) {
     deployer.deploy(Puzzle, [255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]);
 };
