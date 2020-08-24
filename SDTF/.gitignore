@@ -7,3 +7,4 @@ build/
 .openzeppelin/.session
 
 node_modules
+.log

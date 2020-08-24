@@ -29,7 +29,7 @@ async function main() {
 
   // First, prove that the problem exists
 
-  puzzle_og.methods.updateReward.send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6 });
+  puzzle_og.methods.updateReward.send({ from: accounts[0], value: 40e18 , gas: 50000, gasPrice: 1e6,  });
   puzzle_og.methods.submitSolution().send({ from: accounts[1], gas: 6721975, gasPrice: 1e6 });
   puzzle_og.methods.updateReward.send({ from: accounts[0], value: 0 , gas: 50000, gasPrice: 1e6 });
 
