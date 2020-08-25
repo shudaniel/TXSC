@@ -1,6 +1,6 @@
 pragma solidity >= 0.5.0 < 0.6.0;
 
-import "github.com/provable-things/ethereum-api/provableAPI.sol";
+import "./provableAPI.sol";
 
 contract WolframAlpha is usingProvable {
 
@@ -8,13 +8,6 @@ contract WolframAlpha is usingProvable {
 
     event LogNewProvableQuery(string description);
     event LogNewTemperatureMeasure(string temperature);
-
-    // constructor()
-    //     public
-    // {
-    //     // OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
-    //     update(); // Update on contract creation...
-    // }
 
     function __callback(
         bytes32 _myid,

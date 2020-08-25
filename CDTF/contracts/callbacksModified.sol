@@ -1,26 +1,19 @@
 pragma solidity >= 0.5.0 < 0.6.0;
 
-import "github.com/provable-things/ethereum-api/provableAPI.sol";
-import "./callback_log.sol"
+import "./provableAPI.sol";
+import "./callback_log.sol";
 
-contract WolframAlpha is usingProvable {
+contract WolframAlphaModified is usingProvable {
 
     string public temperature;
 
-    mapping(bytes32 -> WolframAlphaLog) private logs;
+    mapping(bytes32 => WolframAlphaLog) private logs;
 
     event LogNewProvableQuery(string description);
     event LogNewTemperatureMeasure(string temperature);
 
-    // constructor()
-    //     public
-    // {
-    //     // OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
-    //     update(); // Update on contract creation...
-    // }
-
-    function finish(string _temperature) private {
-        temperature = _temperature
+    function finish(string memory _temperature) private {
+        temperature = _temperature;
     }
 
     function __callback(
@@ -31,9 +24,9 @@ contract WolframAlpha is usingProvable {
     {
         require(msg.sender == provable_cbAddress());
         logs[_myid].update(_result);
-        emit LogNewTemperatureMeasure(temperature);
         // Do something with the temperature measure...
-        finish(logs[_myid].getTemperature());
+        finish(logs[_myid].temperature());
+        emit LogNewTemperatureMeasure(temperature);
     }
 
     function update()

@@ -4,7 +4,7 @@ contract WolframAlphaLog {
 
     string public temperature;
 
-    constructor(_temperature string)
+    constructor(string memory _temperature)
         public
     {
         temperature = _temperature;
@@ -12,14 +12,9 @@ contract WolframAlphaLog {
     }
 
 
-    function update(_temperature string)
+    function update(string memory _temperature)
         public
     {
         temperature = _temperature;
-    }
-
-    function getTemperature() public 
-    {
-        return temperature;
     }
 }
