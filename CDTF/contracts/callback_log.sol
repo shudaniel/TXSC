@@ -12,7 +12,7 @@ contract WolframAlphaLog {
     }
 
 
-    function update(string memory _temperature)
+    function updatetemperature(string memory _temperature)
         public
     {
         temperature = _temperature;

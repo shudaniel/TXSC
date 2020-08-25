@@ -33,6 +33,7 @@ def extract_state_variables(body, statevariables):
 
     return used_variables
 
+
 def apply_SDTF(input_filename, output_filename):
     # This script will append on additional parameters to each SDTF marked function. 
     # The variable names will equal {variable_prefix}_{state variable name}
