@@ -46,7 +46,7 @@ def create_log_contract(input_filename, output_filename):
                 nodetype = node['type']
 
                 # Get all the state variables
-
+                # If it is an address, make note of it it is payable
                 if nodetype == 'StateVariableDeclaration':
                     for variable in node['variables']:
                         if variable['visibility'] == 'public':
@@ -63,19 +63,19 @@ def create_log_contract(input_filename, output_filename):
                 variabletype = statevariables[variable]
                 f.write("\t" + variabletype + " public " + variable + ";\n")
 
-            constructor = "constructor " + contractName + "("
+            constructor = "constructor ("
             idx = 0
             for variable in statevariables:
                 if idx > 0:
                     constructor += ","
                 variabletype = statevariables[variable]
-                if variabletype == "address" or variabletype == "string" or "byte" in variabletype:
+                if variabletype == "string":
                     constructor += variabletype + " memory _" + variable
                 else:
                     constructor += variabletype + " _" + variable
                 idx += 1
 
-            constructor += ") {\n"
+            constructor += ") public {\n"
             for pair in sorted(statevariables.items()):
                 variable = pair[0]
                 constructor += variable + " = _" + variable + ";\n"
@@ -84,12 +84,12 @@ def create_log_contract(input_filename, output_filename):
 
             for variable in statevariables:
                 variabletype = statevariables[variable]
-                function = "function update" + variable + "("
-                if variabletype == "address" or variabletype == "string" or "byte" in variabletype:
+                function = "function update" + variable + " ("
+                if variabletype == "string":
                     function += variabletype + " memory _" + variable
                 else:
                     function += variabletype + " _" + variable
-                function += ") {\n"
+                function += ") public {\n"
                 function += "\t" + variable + " = _" + variable + ";\n"
 
                 function += "}\n"

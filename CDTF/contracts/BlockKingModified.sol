@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.5.0 <0.6.0;
 import "./provableAPI.sol";
+import "./BlockKingLog.sol";
 
-contract BlockKing is usingProvable {
-    address payable public owner;
-    address payable public king;
-    address payable public warrior;
+contract BlockKingModified is usingProvable {
+    address public owner;
+    address public king;
+    address public warrior;
     uint public kingBlock;
     uint public warriorBlock;
     // uint public warriorGold;
@@ -13,6 +14,7 @@ contract BlockKing is usingProvable {
     uint public minBet;
 
     // mapping(address => uint) pendingWithdrawls;
+    mapping(bytes32 => BlockKingLog) private logs;
 
     event LogNewRandomNumber(string description);
 
@@ -31,13 +33,13 @@ contract BlockKing is usingProvable {
             msg.value >= minBet,
             'This function requires the value to be greater than minBet'
         );
-        warrior = msg.sender;
-        // warriorGold = msg.value;
-        // reward += msg.value;
-        warriorBlock = block.number;
 
         bytes32 myid = provable_query("WolframAlpha", "random number between 1 and 9");
-
+        logs[myid] = new BlockKingLog(owner, king, warrior, kingBlock, warriorBlock, minBet);
+        logs[myid].updatewarrior(msg.sender);
+        // warriorGold = msg.value;
+        // reward += msg.value;
+        logs[myid].updatewarriorBlock(block.number);
 
         
     }
@@ -57,10 +59,11 @@ contract BlockKing is usingProvable {
         while (singleDigitBlock >= 10) {
             singleDigitBlock /= 10;
         }
-        if (randomNumber == singleDigitBlock) {
+        if (true) {
+        // if (randomNumber == singleDigitBlock) {
             // Give 50% to the owner and 50% to the new block king
-           king = warrior;
-           kingBlock = warriorBlock;
+           logs[myid].updateking( logs[myid].warrior() );
+           logs[myid].updatekingBlock( logs[myid].warriorBlock());
 
         //    uint rewardToTransfer1 = reward / 2;
         //    uint rewardToTransfer2 = reward - rewardToTransfer1;
@@ -68,10 +71,18 @@ contract BlockKing is usingProvable {
         //    pendingWithdrawls[owner] = rewardToTransfer1;
         //    pendingWithdrawls[king] = rewardToTransfer2;
         //    reward = 0;
+            finish(myid);
         }
         
     }
     
+    function finish(bytes32 myid) private {
+        owner = logs[myid].owner();
+        king = logs[myid].king();
+        kingBlock = logs[myid].kingBlock();
+        warrior = logs[myid].warrior();
+        warriorBlock = logs[myid].warriorBlock();
+    }
     // function withdraw() public payable {
     //     uint amount = pendingWithdrawls[msg.sender];
     //     pendingWithdrawls[msg.sender] = 0;
