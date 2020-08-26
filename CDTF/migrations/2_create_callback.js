@@ -1,5 +1,5 @@
-const WolframAlpha = artifacts.require("WolframAlpha");
+const BlockKing = artifacts.require("BlockKing");
 
 module.exports = function(deployer) {
-  deployer.deploy(WolframAlpha);
+  deployer.deploy(BlockKing, 0);
 };
