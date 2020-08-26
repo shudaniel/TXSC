@@ -2,7 +2,6 @@ import sys
 import re
 import pprint
 from solidity_parser import parser
-from helpers import *
 
 # According to the solidity parser grammar (https://github.com/solidityj/solidity-antlr4/blob/master/Solidity.g4), 
 # these are the ElementaryTypeName:
@@ -29,17 +28,14 @@ Ufixed
 def create_log_contract(input_filename, output_filename):   
     sourceUnit = parser.parse_file(input_filename)
 
-    f = open(input_filename, "r")
-    contract = f.read()
-    f.close()
-
     pragma = ""
     for child in sourceUnit["children"]:
 
         # Get the pragma version
         # It should always be the first line near the top before the contract definitions
         if child["type"] == "PragmaDirective":
-            pragma = "pragma solidity " +  node['value']
+
+            pragma = "pragma solidity " +  child['value'] + ";\n"
         
         elif child["type"] == "ContractDefinition":
             subnodes = child['subNodes']
@@ -61,24 +57,46 @@ def create_log_contract(input_filename, output_filename):
             # Write the log contract
             f = open(output_filename, "w")
             f.write(pragma)
-            f.write("contract " + contractName + " {")
+            f.write("contract " + contractName + " {\n")
+
+            for variable in statevariables:
+                variabletype = statevariables[variable]
+                f.write("\t" + variabletype + " public " + variable + ";\n")
 
             constructor = "constructor " + contractName + "("
+            idx = 0
+            for variable in statevariables:
+                if idx > 0:
+                    constructor += ","
+                variabletype = statevariables[variable]
+                if variabletype == "address" or variabletype == "string" or "byte" in variabletype:
+                    constructor += variabletype + " memory _" + variable
+                else:
+                    constructor += variabletype + " _" + variable
+                idx += 1
 
-            constructor + ")"
+            constructor += ") {\n"
+            for pair in sorted(statevariables.items()):
+                variable = pair[0]
+                constructor += variable + " = _" + variable + ";\n"
+            constructor += "}\n"
             f.write(constructor)
 
             for variable in statevariables:
                 variabletype = statevariables[variable]
-                f.write("\t" + variabletype + " public " + variable)
-            for variable in statevariables:
-                variabletype = statevariables[variable]
-                f.write("\t" + variabletype + " public " + variable)
+                function = "function update" + variable + "("
+                if variabletype == "address" or variabletype == "string" or "byte" in variabletype:
+                    function += variabletype + " memory _" + variable
+                else:
+                    function += variabletype + " _" + variable
+                function += ") {\n"
+                function += "\t" + variable + " = _" + variable + ";\n"
+
+                function += "}\n"
+                f.write(function)
+            
             f.write("}")
             f.close()
-
-
-    pprint.pprint(sourceUnit)
 
 if __name__ == '__main__':
     create_log_contract(sys.argv[1], sys.argv[2])

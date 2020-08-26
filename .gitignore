@@ -8,4 +8,5 @@ build/
 .openzeppelin/.session
 
 node_modules
-.log
+*.log
+.node-xmlhttprequest-sync-22232
