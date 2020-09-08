@@ -82,6 +82,9 @@ def create_log_contract(input_filename, output_filename):
             constructor += "}\n"
             f.write(constructor)
 
+            # Fallback function
+            f.write("function () public payable {}\n")
+
             for variable in statevariables:
                 variabletype = statevariables[variable]
                 function = "function update" + variable + " ("

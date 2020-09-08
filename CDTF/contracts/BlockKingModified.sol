@@ -5,8 +5,8 @@ import "./BlockKingLog.sol";
 
 contract BlockKingModified is usingProvable {
     address public owner;
-    address public king;
-    address public warrior;
+    address payable public king;
+    address payable public warrior;
     uint public kingBlock;
     uint public warriorBlock;
     // uint public warriorGold;
@@ -41,6 +41,9 @@ contract BlockKingModified is usingProvable {
         // reward += msg.value;
         logs[myid].updatewarriorBlock(block.number);
 
+        // Transfer the ether from this message to the log contract
+        address(logs[myid]).send(msg.value);
+
         
     }
 
@@ -59,12 +62,14 @@ contract BlockKingModified is usingProvable {
         while (singleDigitBlock >= 10) {
             singleDigitBlock /= 10;
         }
-        if (true) {
-        // if (randomNumber == singleDigitBlock) {
+        // if (true) {
+        if (randomNumber == singleDigitBlock) {
             // Give 50% to the owner and 50% to the new block king
            logs[myid].updateking( logs[myid].warrior() );
            logs[myid].updatekingBlock( logs[myid].warriorBlock());
 
+            logs[myid].sendbalance();
+            king.send(address(this).balance);
         //    uint rewardToTransfer1 = reward / 2;
         //    uint rewardToTransfer2 = reward - rewardToTransfer1;
            
@@ -72,6 +77,10 @@ contract BlockKingModified is usingProvable {
         //    pendingWithdrawls[king] = rewardToTransfer2;
         //    reward = 0;
             finish(myid);
+        }
+        else {
+            // Place the money in the pot
+            logs[myid].sendbalance();
         }
         
     }

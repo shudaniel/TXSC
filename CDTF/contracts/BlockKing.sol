@@ -9,10 +9,10 @@ contract BlockKing is usingProvable {
     uint public kingBlock;
     uint public warriorBlock;
     // uint public warriorGold;
-    // uint public reward;
+    uint public reward;
     uint public minBet;
 
-    // mapping(address => uint) pendingWithdrawls;
+    mapping(address => uint) pendingWithdrawls;
 
     event LogNewRandomNumber(string description);
 
@@ -22,7 +22,7 @@ contract BlockKing is usingProvable {
         king = msg.sender;
         warrior = msg.sender;
         warriorBlock = block.number;
-        // reward = msg.value;
+        reward = msg.value;
         kingBlock = block.number;
     }
 
@@ -69,6 +69,7 @@ contract BlockKing is usingProvable {
         //    pendingWithdrawls[king] = rewardToTransfer2;
         //    reward = 0;
         }
+        
         
     }
     
