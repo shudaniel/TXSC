@@ -101,5 +101,83 @@ def create_log_contract(input_filename, output_filename):
             f.write("}")
             f.close()
 
+def apply_CDTF(input_filename, output_filename, logfilename):
+    sourceUnit = parser.parse_file(input_filename)
+    f = open(input_filename, "r")
+    contract = f.read()
+    f.close()
+  
+    for child in sourceUnit["children"]:
+        
+        if child["type"] == "ContractDefinition":
+            subnodes = child['subNodes']
+            statevariables = dict()
+            contractName = child['name']
+            contractLogTypeName = contractName + "Log"
+            contractLogVariableName = contractLogTypeName + "logs"
+
+            for node in subnodes:   
+                nodetype = node['type']
+
+                # Get all the state variables
+                # If it is an address, make note of it it is payable
+                if nodetype == 'StateVariableDeclaration':
+                    for variable in node['variables']:
+                        if variable['visibility'] == 'public':
+                            # At the moment, this framework will only work on state variables that are of type : ElementaryTypeName
+                            if variable['typeName']['type'] == "ElementaryTypeName":
+                                statevariables[variable['name']] = variable["typeName"]["name"]
+
+                elif nodetype == "FunctionDefinition" and not node['isConstructor']:
+            
+                    name = node['name']
+                    body = node['body']
+
+                    
+            import_statement = "import \"" + logfilename + "\";"
+            # Create the instance variable
+            logs_var = contractLogTypeName + " private " + contractLogVariableName + ";"    
+
+            # Insert this at the very start of the contract
+            contractdefinition = r"contract\s+" + contractName + r".*{"
+            contractdefinitionResult = re.search(contractdefinition, contract).group()
+            # Add the contract log 
+            contract = re.sub(contractdefinitionResult, import_statement + "\n" + contractdefinitionResult + "\n" + logs_var + "\n", contract)
+
+
+            cdtf_enter_re = r"@CDTF\s+ENTER\s*function.+\(.*\).*{"
+
+            cdtf_enter = re.search(cdtf_enter_re, contract)
+            if cdtf_enter is None:
+                # There is no cdtf entrance
+                continue
+
+
+            # First, find the @CDTF ENTER tag. That indicates where to create the log contract
+            contract_creation = contractLogVariableName + " = " + contractLogTypeName + "(" 
+            first = True
+            for var in statevariables:
+                if not first:
+                    contract_creation += ","
+                else:
+                    first = False
+                contract_creation += var
+
+            contract_creation += ")"
+            contract = re.sub(cdtf_enter_re, cdtf_enter.group() + "\n" + contract_creation + "\n", contract)
+
+
+            
+
+            # For every place that contains  @CDTF tag, replce all variable assignemnts and reads to Log updates and reads
+
+    # Write the new contract into a file
+    f = open(output_filename, "w")
+    f.write(contract)
+    f.close
+    
+
 if __name__ == '__main__':
+    assert(len(sys.argv) > 3)
     create_log_contract(sys.argv[1], sys.argv[2])
+    apply_CDTF(sys.argv[1], sys.argv[3], sys.argv[2])

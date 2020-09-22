@@ -20,26 +20,26 @@ async function main() {
   const addr = '0xd84401A82e76eD93BDF2Faa502AF915805dCF7B0';
   const contract = loader.fromArtifact('BlockKingModified', addr);
   // To 
-  await contract.methods.king().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
-    console.log("King:", result);
-    });
-  await contract.methods.kingBlock().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
-    console.log("KingBlock:", result);
-    });
-  await contract.methods.warrior().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
-    console.log("Warrior:", result);
-    });
-  await contract.methods.warriorBlock().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
-    console.log("WarriorBlock:", result);
-    });
+  // await contract.methods.king().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+  //   console.log("King:", result);
+  //   });
+  // await contract.methods.kingBlock().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+  //   console.log("KingBlock:", result);
+  //   });
+  // await contract.methods.warrior().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+  //   console.log("Warrior:", result);
+  //   });
+  // await contract.methods.warriorBlock().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
+  //   console.log("WarriorBlock:", result);
+  //   });
   balance = await web3.eth.getBalance(addr);
   console.log("Balance:", balance);
 
 
 
-  // contract.methods.enter().send({ from: accounts[1], value: 1e18 , gas: 6721975, gasPrice: 1e6 })
-  // contract.methods.enter().send({ from: accounts[2], value: 1e18 , gas: 6721975, gasPrice: 1e6 })
-  // contract.methods.enter().send({ from: accounts[3], value: 1e18 , gas: 6721975, gasPrice: 1e6 })
+  // contract.methods.enter().send({ from: accounts[1], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
+  // contract.methods.enter().send({ from: accounts[2], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
+  // contract.methods.enter().send({ from: accounts[3], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
   // contract.methods.warrior().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
   //   console.log("Warrior:", result);
   //   });

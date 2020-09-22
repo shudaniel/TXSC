@@ -2,7 +2,10 @@
 pragma solidity >=0.5.0 <0.6.0;
 import "./provableAPI.sol";
 
+import "logtest.sol";
 contract BlockKing is usingProvable {
+BlockKingLog private BlockKingLoglogs;
+
     address payable public owner;
     address payable public king;
     address payable public warrior;
@@ -28,6 +31,8 @@ contract BlockKing is usingProvable {
 
     // @CDTF ENTER
     function enter() public payable {
+BlockKingLoglogs = BlockKingLog(owner,king,warrior,kingBlock,warriorBlock,reward,minBet)
+
         require (
             msg.value >= minBet,
             'This function requires the value to be greater than minBet'
