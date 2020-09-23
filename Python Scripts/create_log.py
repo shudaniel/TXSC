@@ -25,6 +25,27 @@ Ufixed
   : 'ufixed' | ( 'ufixed' [0-9]+ 'x' [0-9]+ ) ;
 '''
 
+def find_function(contract, func_re):
+    original_function = ""
+    function_def = re.search(func_re, contract).group()
+
+    original_function += function_def
+    i = contract.find(function_def) + len(function_def)
+    parenthesis_stack = ["{"]
+
+    while len(parenthesis_stack) > 0:
+        char = contract[i]
+        original_function += char
+        if char == "{":
+            parenthesis_stack.append("{")
+        elif char == "}":
+            parenthesis_stack.pop()
+        i += 1
+    
+    return original_function
+    
+
+
 def create_log_contract(input_filename, output_filename):   
     sourceUnit = parser.parse_file(input_filename)
 
@@ -106,6 +127,8 @@ def apply_CDTF(input_filename, output_filename, logfilename):
     f = open(input_filename, "r")
     contract = f.read()
     f.close()
+
+    operator_signs = ["+", "-", "*", "/"]
   
     for child in sourceUnit["children"]:
         
@@ -115,6 +138,10 @@ def apply_CDTF(input_filename, output_filename, logfilename):
             contractName = child['name']
             contractLogTypeName = contractName + "Log"
             contractLogVariableName = contractLogTypeName + "logs"
+
+            functions_to_modify = []
+            cdtf_enter_re = r"@CDTF\s+ENTER\s*function.+\(.*\).*{"
+            cdtf_end_re = r"@CDTF\s+END\s*function.+\(.*\).*{"
 
             for node in subnodes:   
                 nodetype = node['type']
@@ -131,7 +158,25 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                 elif nodetype == "FunctionDefinition" and not node['isConstructor']:
             
                     name = node['name']
-                    body = node['body']
+                    definition_re = r"@CDTF\s*function\s+" + name + r"\s*\(.*\).*{"
+                    functionDefinitionresult = re.search(definition_re, contract)
+                    if functionDefinitionresult is None:
+                        # Check for the ENTER tag
+                        definition_re = r"@CDTF\s+ENTER\s*function\s+" + name + r"\s*\(.*\).*{"
+                        functionDefinitionresult = re.search(definition_re, contract)
+                        if functionDefinitionresult is None:
+                            definition_re = r"@CDTF\s+END\s*function\s+" + name + r"\s*\(.*\).*{"
+                            functionDefinitionresult = re.search(definition_re, contract)
+
+                            if functionDefinitionresult is None:
+                                continue
+                            else:
+                                cdtf_end_re = definition_re
+                        else:
+                            cdtf_enter_re = definition_re
+
+                    functions_to_modify.append(definition_re)
+
 
                     
             import_statement = "import \"" + logfilename + "\";"
@@ -145,15 +190,65 @@ def apply_CDTF(input_filename, output_filename, logfilename):
             contract = re.sub(contractdefinitionResult, import_statement + "\n" + contractdefinitionResult + "\n" + logs_var + "\n", contract)
 
 
-            cdtf_enter_re = r"@CDTF\s+ENTER\s*function.+\(.*\).*{"
-
             cdtf_enter = re.search(cdtf_enter_re, contract)
-            if cdtf_enter is None:
+            cdtf_end = re.search(cdtf_end_re, contract)
+            if cdtf_enter is None or cdtf_end is None:
                 # There is no cdtf entrance
                 continue
 
+            
+            
+            # For every place that contains  @CDTF tag, replce all variable assignemnts and reads to Log updates and reads
+            for func_def in functions_to_modify:
+                # First, replace all +=, -=, /=, and *=
+                new_func_def = find_function(contract, func_def)
+                original_function = new_func_def
+                for var in statevariables:
+                    for sign in operator_signs:
+                        var_re = var + r"\s*[" + sign + r"]="
+                        new_update_statement = var + " = " + var + " " + sign + " "
+                        new_func_def = re.sub(var_re, new_update_statement, new_func_def)
+                        # var_re_result = re.search(var_re, new_func_def)
 
-            # First, find the @CDTF ENTER tag. That indicates where to create the log contract
+                        # while var_re_result is not None:
+                        #     variable_update_statement = var_re_result.group()
+                        #     
+                        #     new_func_def = new_func_def.replace(variable_update_statement, new_update_statement)
+
+                        #     var_re_result = re.search(var_re, new_func_def)
+                
+                
+                # Next, replace all assignment statements with a call to the update function in the log
+                for var in statevariables:
+                    var_assignment_re = var + r"\s*="
+                    var_assignment_re_result = re.search(var_assignment_re, new_func_def)
+                    if var_assignment_re_result is not None:
+                        new_update_statement = contractLogVariableName + ".update" + var + "("
+                        new_func_def = new_func_def.replace(var_assignment_re_result.group(), new_update_statement )
+
+                        # Add the ending parenthesis
+                        var_update_re = r"(?<=" + contractLogVariableName + ".update" + var + r"\().*;"
+                        
+                        update_parameters = re.findall(var_update_re, new_func_def)
+
+                        for result in update_parameters:
+                            update_parameter_modified = new_update_statement + result[:-1] + ");"
+
+                            new_func_def = new_func_def.replace(new_update_statement + result,  update_parameter_modified) 
+
+                # Finally, replace all remaining uses of the state variable to calls to the log function
+
+                for var in statevariables:
+                    log_read_statement = contractLogVariableName + "." + var + "() "
+                    variable_re = r"[^0-9A-Fa-f]" + var + r"[^0-9A-Fa-f]"
+
+                    new_func_def = re.sub(variable_re, log_read_statement, new_func_def)
+
+
+                contract = contract.replace(original_function, new_func_def)
+
+
+            # Find the @CDTF ENTER tag. That indicates where to create the log contract
             contract_creation = contractLogVariableName + " = " + contractLogTypeName + "(" 
             first = True
             for var in statevariables:
@@ -165,11 +260,15 @@ def apply_CDTF(input_filename, output_filename, logfilename):
 
             contract_creation += ")"
             contract = re.sub(cdtf_enter_re, cdtf_enter.group() + "\n" + contract_creation + "\n", contract)
-
-
             
+            # Find the @CDTF END tag. This indicates at the end, you need to update the contract
+            contract_update = ""
+            for var in statevariables:
+                contract_update += var + " = " + contractLogVariableName + "." + var + "();\n"
+            ending_function = find_function(contract, cdtf_end_re)
+            new_ending_function = ending_function[:-1] + "\n" + contract_update + "\n}"
+            contract = contract.replace(ending_function, new_ending_function)
 
-            # For every place that contains  @CDTF tag, replce all variable assignemnts and reads to Log updates and reads
 
     # Write the new contract into a file
     f = open(output_filename, "w")
