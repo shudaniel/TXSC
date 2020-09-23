@@ -33,13 +33,31 @@ def find_function(contract, func_re):
     i = contract.find(function_def) + len(function_def)
     parenthesis_stack = ["{"]
 
+    # Ignore any braces on commented-out lines
+    ignore_line = False
+    
+    # Ignore any commented out blocks
+    ignore_block = False
     while len(parenthesis_stack) > 0:
         char = contract[i]
         original_function += char
-        if char == "{":
+
+        # The current implementation to ignore commented out code could pose problems\
+        # if the symbols "//" or "/*" appear in a string
+        if char == "/" and i + 1 < len(contract):
+            if contract[i + 1] == "/":
+                ignore_line = True
+            elif contract[i + 1] == "*":
+                ignore_block = True
+        elif char == "{" and not ignore_line and not ignore_block:
             parenthesis_stack.append("{")
-        elif char == "}":
+        elif char == "}" and not ignore_line and not ignore_block:
             parenthesis_stack.pop()
+        elif char == "\n" and ignore_line:
+            # At end of line, reset the ignore_line flag
+            ignore_line = False
+        elif ignore_block and char == "*" and i + 1 < len(contract) and contract[i + 1] == "/":
+            ignore_block = False
         i += 1
     
     return original_function
@@ -127,6 +145,7 @@ def apply_CDTF(input_filename, output_filename, logfilename):
     f = open(input_filename, "r")
     contract = f.read()
     f.close()
+    
 
     operator_signs = ["+", "-", "*", "/"]
   
