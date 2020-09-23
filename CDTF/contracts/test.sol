@@ -80,18 +80,20 @@ BlockKingLoglogs = new BlockKingLog(owner,king,warrior,kingBlock,warriorBlock,mi
 
         }
         
-        owner = BlockKingLoglogs.owner();
-        king = BlockKingLoglogs.king();
-        warrior = BlockKingLoglogs.warrior();
-        kingBlock = BlockKingLoglogs.kingBlock();
-        warriorBlock = BlockKingLoglogs.warriorBlock();
-        minBet = BlockKingLoglogs.minBet();
-    }
+        
+    
+owner = BlockKingLoglogs.owner();
+king = BlockKingLoglogs.king();
+warrior = BlockKingLoglogs.warrior();
+kingBlock = BlockKingLoglogs.kingBlock();
+warriorBlock = BlockKingLoglogs.warriorBlock();
+minBet = BlockKingLoglogs.minBet();
+
+}
     
     // function withdraw() public payable {
     //     uint amount = pendingWithdrawls[msg.sender];
     //     pendingWithdrawls[msg.sender] = 0;
     //     msg.sender.transfer(amount);
     // }
-
 }
