@@ -5,18 +5,15 @@ contract BlockKingLog {
 	address public warrior;
 	uint public kingBlock;
 	uint public warriorBlock;
-	uint public reward;
 	uint public minBet;
-constructor (address _owner,address _king,address _warrior,uint _kingBlock,uint _warriorBlock,uint _reward,uint _minBet) public {
+constructor (address _owner,address _king,address _warrior,uint _kingBlock,uint _warriorBlock,uint _minBet) public {
 king = _king;
 kingBlock = _kingBlock;
 minBet = _minBet;
 owner = _owner;
-reward = _reward;
 warrior = _warrior;
 warriorBlock = _warriorBlock;
 }
-function () public payable {}
 function updateowner (address _owner) public {
 	owner = _owner;
 }
@@ -31,9 +28,6 @@ function updatekingBlock (uint _kingBlock) public {
 }
 function updatewarriorBlock (uint _warriorBlock) public {
 	warriorBlock = _warriorBlock;
-}
-function updatereward (uint _reward) public {
-	reward = _reward;
 }
 function updateminBet (uint _minBet) public {
 	minBet = _minBet;

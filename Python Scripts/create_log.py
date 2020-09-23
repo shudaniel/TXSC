@@ -104,7 +104,7 @@ def create_log_contract(input_filename, output_filename):
             f.write(constructor)
 
             # Fallback function
-            f.write("function () public payable {}\n")
+            # f.write("function () public payable {}\n")
 
             for variable in statevariables:
                 variabletype = statevariables[variable]
@@ -156,7 +156,7 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                                 statevariables[variable['name']] = variable["typeName"]["name"]
 
                 elif nodetype == "FunctionDefinition" and not node['isConstructor']:
-            
+                    
                     name = node['name']
                     definition_re = r"@CDTF\s*function\s+" + name + r"\s*\(.*\).*{"
                     functionDefinitionresult = re.search(definition_re, contract)
@@ -178,7 +178,8 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                     functions_to_modify.append(definition_re)
 
 
-                    
+            if len(logfilename) < 2 or logfilename[:2] != "./":
+                logfilename = "./" + logfilename
             import_statement = "import \"" + logfilename + "\";"
             # Create the instance variable
             logs_var = contractLogTypeName + " private " + contractLogVariableName + ";"    
@@ -208,14 +209,6 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                         var_re = var + r"\s*[" + sign + r"]="
                         new_update_statement = var + " = " + var + " " + sign + " "
                         new_func_def = re.sub(var_re, new_update_statement, new_func_def)
-                        # var_re_result = re.search(var_re, new_func_def)
-
-                        # while var_re_result is not None:
-                        #     variable_update_statement = var_re_result.group()
-                        #     
-                        #     new_func_def = new_func_def.replace(variable_update_statement, new_update_statement)
-
-                        #     var_re_result = re.search(var_re, new_func_def)
                 
                 
                 # Next, replace all assignment statements with a call to the update function in the log
@@ -241,15 +234,18 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                 for var in statevariables:
                     log_read_statement = contractLogVariableName + "." + var + "() "
                     variable_re = r"[^0-9A-Fa-f]" + var + r"[^0-9A-Fa-f]"
+                    variable_results = re.findall(variable_re, new_func_def)
+                    for result in variable_results:
+                        newresult = result.replace(var, log_read_statement)
 
-                    new_func_def = re.sub(variable_re, log_read_statement, new_func_def)
+                        new_func_def = new_func_def.replace(result, newresult)
 
 
                 contract = contract.replace(original_function, new_func_def)
 
 
             # Find the @CDTF ENTER tag. That indicates where to create the log contract
-            contract_creation = contractLogVariableName + " = " + contractLogTypeName + "(" 
+            contract_creation = contractLogVariableName + " = new " + contractLogTypeName + "(" 
             first = True
             for var in statevariables:
                 if not first:
@@ -258,7 +254,7 @@ def apply_CDTF(input_filename, output_filename, logfilename):
                     first = False
                 contract_creation += var
 
-            contract_creation += ")"
+            contract_creation += ");"
             contract = re.sub(cdtf_enter_re, cdtf_enter.group() + "\n" + contract_creation + "\n", contract)
             
             # Find the @CDTF END tag. This indicates at the end, you need to update the contract

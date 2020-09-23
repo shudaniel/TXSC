@@ -3,13 +3,13 @@ pragma solidity >=0.5.0 <0.6.0;
 import "./provableAPI.sol";
 
 contract BlockKing is usingProvable {
-    address payable public owner;
-    address payable public king;
-    address payable public warrior;
+    address public owner;
+    address public king;
+    address public warrior;
     uint public kingBlock;
     uint public warriorBlock;
     // uint public warriorGold;
-    uint public reward;
+    // uint public reward;
     uint public minBet;
 
     mapping(address => uint) pendingWithdrawls;
@@ -22,7 +22,7 @@ contract BlockKing is usingProvable {
         king = msg.sender;
         warrior = msg.sender;
         warriorBlock = block.number;
-        reward = msg.value;
+        // reward = msg.value;
         kingBlock = block.number;
     }
 
@@ -33,7 +33,6 @@ contract BlockKing is usingProvable {
             'This function requires the value to be greater than minBet'
         );
         warrior = msg.sender;
-        warriorBlock = block.number;
         // warriorGold = msg.value;
         // reward += msg.value;
 
@@ -43,6 +42,7 @@ contract BlockKing is usingProvable {
         
     }
 
+    // @CDTF END
     function __callback(bytes32 myid, string memory result) public {
         require (msg.sender == provable_cbAddress(),
             'This function can only be accessed by the provable callback address'
@@ -58,7 +58,8 @@ contract BlockKing is usingProvable {
         while (singleDigitBlock >= 10) {
             singleDigitBlock /= 10;
         }
-        if (randomNumber == singleDigitBlock) {
+        if (true) {
+        // if (randomNumber == singleDigitBlock) {
             // Give 50% to the owner and 50% to the new block king
            king = warrior;
            kingBlock = warriorBlock;

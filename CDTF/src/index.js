@@ -17,8 +17,12 @@ async function main() {
   const loader = setupLoader({ provider: web3 }).web3;
 
   // Set up a web3 contract, representing our deployed Box instance, using the contract loader
-  const addr = '0xd84401A82e76eD93BDF2Faa502AF915805dCF7B0';
+  const addr = '988D929956DD25D9aE97D4383FD490080Cf1594f';
   const contract = loader.fromArtifact('BlockKingModified', addr);
+  // contract.methods.enter().send({ from: accounts[1], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
+  contract.methods.enter().send({ from: accounts[2], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
+  // await contract.methods.enter().send({ from: accounts[3], value: 1e18 , gas: 6721975, gasPrice: 1e6 });
+  
   // To 
   // await contract.methods.king().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
   //   console.log("King:", result);
@@ -32,8 +36,8 @@ async function main() {
   // await contract.methods.warriorBlock().call({ from: accounts[0], gas: 6721975, gasPrice: 1e6 }).then(function(result){
   //   console.log("WarriorBlock:", result);
   //   });
-  balance = await web3.eth.getBalance(addr);
-  console.log("Balance:", balance);
+  // balance = await web3.eth.getBalance(addr);
+  // console.log("Balance:", balance);
 
 
 
